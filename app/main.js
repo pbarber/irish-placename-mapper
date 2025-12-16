@@ -1,4 +1,8 @@
-import { places } from './places.js';
+var places = null;
+var placesPromise = fetch('./places.json').then(response => response.json()).then(function (data) {
+    places = data;
+    return data;
+});
 
 var rowIdCounter;
 
@@ -12,36 +16,40 @@ function filterListByRegex(list, regexPattern) {
     return filteredList;
 }
 
-function createSearchLayer(pattern, color) {
-    const filteredList = filterListByRegex(places, pattern);
-    var l = L.layerGroup();
+function createSearchLayer(pattern, color, rowId) {
+    // Use placesPromise to ensure places are loaded before filtering
+    placesPromise.then(placesData => {
+        const filteredList = filterListByRegex(placesData, pattern);
 
-    if (L.Browser.mobile) {
-        var radius = 4;
-    } else {
-        var radius = 2;
-    }
+        var l = L.layerGroup();
 
-    filteredList.forEach((entry) => {
-        var circle = L.circleMarker([entry[1], entry[2]], {
-                color: color,
-                fillColor: color,
-                fillOpacity: 1.0,
-                radius: radius
-            });
-        
         if (L.Browser.mobile) {
-            circle.bindPopup(entry[0]);
+            var radius = 4;
+        } else {
+            var radius = 2;
         }
-        else {
-            circle.bindTooltip(entry[0]);
-        }
-        l.addLayer(circle);
-    })
+    
+        filteredList.forEach((entry) => {
+            var circle = L.circleMarker([entry[1], entry[2]], {
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 1.0,
+                    radius: radius
+                });
+            
+            if (L.Browser.mobile) {
+                circle.bindPopup(entry[0]);
+            }
+            else {
+                circle.bindTooltip(entry[0]);
+            }
+            l.addLayer(circle);
+        })
+    
+        l.addTo(map);
 
-    l.addTo(map);
-
-    return l;
+        idToLayer[rowId] = l;
+    });
 }
 
 // Initialize the map and set its view to our chosen geographical coordinates and a zoom level
@@ -179,8 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         search = textInputValue;
                 }
 
-                var newLayer = createSearchLayer(search, colorInputValue)
-                idToLayer[rowId] = newLayer;
+                createSearchLayer(search, colorInputValue, rowId);
                 row.querySelector('input[type="checkbox"]').checked = true;
                 _paq.push(['trackSiteSearch',
                     // Search keyword searched for
