@@ -189,14 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 createSearchLayer(search, colorInputValue, rowId);
                 row.querySelector('input[type="checkbox"]').checked = true;
-                _paq.push(['trackSiteSearch',
-                    // Search keyword searched for
-                    search,
-                    // Search category selected in your search engine. If you do not need this, set to false
-                    dropdownInputValue,
-                    // Number of results on the Search results page. Zero indicates a 'No Result Search Keyword'. Set to false if you don't know
-                    false
-                ]);
             }
         });
     });
